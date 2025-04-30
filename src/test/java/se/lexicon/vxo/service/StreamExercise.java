@@ -5,10 +5,17 @@ import se.lexicon.vxo.model.Gender;
 import se.lexicon.vxo.model.Person;
 import se.lexicon.vxo.model.PersonDto;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,7 +45,8 @@ public class StreamExercise {
     public void task2() {
         long amount = 0;
 
-        // todo: write your code here
+        // done: write your code here
+        amount = people.stream().count();
 
         assertEquals(10000, amount);
     }
@@ -51,7 +59,10 @@ public class StreamExercise {
         long amount = 0;
         int expected = 90;
 
-        // todo: write your code here
+        // done: write your code here
+        amount = people.stream()
+                .filter(person -> person.getLastName().equals("Andersson"))
+                .count();
 
         assertEquals(expected, amount);
     }
@@ -64,7 +75,10 @@ public class StreamExercise {
         int expectedSize = 4988;
         List<Person> females = null;
 
-        // todo: write your code here
+        // done: write your code here
+        females = people.stream()
+                .filter(person -> person.getGender().equals(Gender.FEMALE))
+                .collect(Collectors.toList());
 
         assertNotNull(females);
         assertEquals(expectedSize, females.size());
@@ -78,9 +92,10 @@ public class StreamExercise {
         int expectedSize = 8882;
         Set<LocalDate> dates = null;
 
-
-        // todo: write your code here
-
+        // done: write your code here
+        dates = people.stream()
+                        .map(Person::getDateOfBirth)
+                        .collect(TreeSet::new, TreeSet::add, TreeSet::addAll);
 
         assertNotNull(dates);
         assertTrue(dates instanceof TreeSet);
@@ -96,8 +111,10 @@ public class StreamExercise {
 
         Person[] result = null;
 
-        // todo: write your code here
-
+        // done: write your code here
+        result = people.stream()
+                .filter(person -> person.getFirstName().equals("Erik"))
+                .toArray(size -> new Person[size]);
 
         assertNotNull(result);
         assertEquals(expectedLength, result.length);
@@ -112,8 +129,10 @@ public class StreamExercise {
 
         Optional<Person> optional = null;
 
-        // todo: write your code here
-
+        // done: write your code here
+        optional = people.stream()
+                        .filter(person -> person.getPersonId() == 5436)
+                        .findFirst();
 
         assertNotNull(optional);
         assertTrue(optional.isPresent());
@@ -129,7 +148,9 @@ public class StreamExercise {
 
         Optional<Person> optional = null;
 
-        // todo: write your code here
+        // done: write your code here
+        optional = people.stream()
+                        .min(Comparator.comparing(person -> person.getDateOfBirth()));
 
         assertNotNull(optional);
         assertEquals(expectedBirthDate, optional.get().getDateOfBirth());
@@ -145,7 +166,11 @@ public class StreamExercise {
 
         List<PersonDto> dtoList = null;
 
-        // todo: write your code here
+        // done: write your code here
+        dtoList = people.stream()
+            .filter(person -> person.getDateOfBirth().isBefore(date))
+            .map(person -> new PersonDto(person.getPersonId(), person.getFirstName().concat(" ").concat(person.getLastName())) )
+            .collect(Collectors.toList());
 
 
         assertNotNull(dtoList);
@@ -164,8 +189,11 @@ public class StreamExercise {
 
         Optional<String> optional = null;
 
-        // todo: write your code here
-
+        // done: write your code here
+        optional = people.stream()
+            .filter(person -> person.getPersonId() == personId)
+            .map(person -> person.getDateOfBirth().format(DateTimeFormatter.ofPattern("EEEE d LLLL uuuu")).toUpperCase())
+            .findFirst();
 
         assertNotNull(optional);
         assertTrue(optional.isPresent());
@@ -183,7 +211,11 @@ public class StreamExercise {
         double expected = 54.42;
         double averageAge = 0;
 
-        // todo: write your code here
+        // done: write your code here
+        averageAge = people.stream()
+                        .mapToInt(personToAge)
+                        .average()
+                        .getAsDouble();
 
         assertTrue(averageAge > 0);
         assertEquals(expected, averageAge, .01);
@@ -198,7 +230,19 @@ public class StreamExercise {
 
         String[] result = null;
 
-        // todo: write your code here
+        // done: write your code here
+        result = people.stream()
+                .map(Person::getFirstName)
+                .map(String::toLowerCase)
+                .filter(firstName -> IntStream
+                        .range(0, firstName.length() / 2)
+                        .noneMatch(i -> firstName.charAt(i) != firstName.charAt(firstName.length() - i - 1)) )
+                .distinct()
+                .sorted()
+                .map(firstName -> firstName.substring(0, 1).toUpperCase() + firstName.substring(1))
+                .toArray(String[]::new);
+
+        System.out.println(Arrays.toString(result));
 
         assertNotNull(result);
         assertArrayEquals(expected, result);
@@ -212,7 +256,9 @@ public class StreamExercise {
         int expectedSize = 107;
         Map<String, List<Person>> personMap = null;
 
-        // todo: write your code here
+        // done: write your code here
+        personMap = people.stream()
+                        .collect(Collectors.groupingBy(person -> person.getLastName()));
 
         assertNotNull(personMap);
         assertEquals(expectedSize, personMap.size());
@@ -226,6 +272,11 @@ public class StreamExercise {
         LocalDate[] _2020_dates = null;
 
         // todo: write your code here
+        LocalDate startDate = LocalDate.of(2020,1,1);
+        LocalDate endDate = LocalDate.of(2021,1,1);
+        _2020_dates = Stream.iterate(startDate, nextDate -> nextDate.plusDays(1))
+                        .limit(ChronoUnit.DAYS.between(startDate,endDate))
+                        .toArray(LocalDate[]::new);
 
         assertNotNull(_2020_dates);
         assertEquals(366, _2020_dates.length);
